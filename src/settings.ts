@@ -1,36 +1,21 @@
-import {App, PluginSettingTab, Setting} from "obsidian";
-import MyPlugin from "./main";
-
-export interface MyPluginSettings {
-	mySetting: string;
+export interface GitHubPagerSettings {
+	githubToken: string;
+	repositoryOwner: string;
+	repositoryName: string;
+	basePath: string; // e.g., "content/posts"
+	imagePath: string; // e.g., "static/images"
+	commitMessage: string;
+	autoSync: boolean;
+	syncInterval: number; // in minutes
 }
 
-export const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
-
-export class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
-
-	constructor(app: App, plugin: MyPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const {containerEl} = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl)
-			.setName('Settings #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
-	}
+export const DEFAULT_SETTINGS: GitHubPagerSettings = {
+	githubToken: '',
+	repositoryOwner: '',
+	repositoryName: '',
+	basePath: 'content/posts',
+	imagePath: 'static/images',
+	commitMessage: 'Update {{file}} via Obsidian',
+	autoSync: false,
+	syncInterval: 15
 }

@@ -1,99 +1,118 @@
-import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
-import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
+import { Plugin, Notice, TFile, arrayBufferToBase64 } from 'obsidian';
+import { GitHubPagerSettings, DEFAULT_SETTINGS } from "./settings";
+import { GitHubPagerSettingTab } from "./settings-tab";
+import { GitHubAdapter } from "./github-adapter";
+import { ContentProcessor } from "./content-processor";
+import { SyncEngine } from "./sync-engine";
 
-// Remember to rename these classes and interfaces!
-
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class GitHubPagerPlugin extends Plugin {
+	settings: GitHubPagerSettings;
+	githubAdapter: GitHubAdapter | null = null;
+	processor: ContentProcessor | null = null;
+	syncEngine: SyncEngine | null = null;
 
 	async onload() {
 		await this.loadSettings();
 
-		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('dice', 'Sample', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
+		this.initAdapter();
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status bar text');
+		this.syncEngine = new SyncEngine(this);
+		this.syncEngine.start();
 
-		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
-			id: 'open-modal-simple',
-			name: 'Open modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'replace-selected',
-			name: 'Replace selected content',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				editor.replaceSelection('Sample editor command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-modal-complex',
-			name: 'Open modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
+			id: 'test-github-connection',
+			name: 'Test GitHub Connection',
+			callback: async () => {
+				if (!this.githubAdapter) {
+					new Notice('GitHub Adapter not initialized. Check settings.');
+					return;
 				}
-				return false;
+				const user = await this.githubAdapter.verifyAuth();
+				if (user) {
+					new Notice(`Authenticated as ${user}`);
+				} else {
+					new Notice('Authentication failed. Check token.');
+				}
 			}
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			new Notice("Click");
+		this.addCommand({
+			id: 'push-current-file',
+			name: 'Push Current File to GitHub',
+			callback: async () => {
+				const file = this.app.workspace.getActiveFile();
+				if (!file) {
+					new Notice('No active file.');
+					return;
+				}
+				if (!this.githubAdapter || !this.processor) {
+					new Notice('GitHub Adapter not ready.');
+					return;
+				}
+				
+				try {
+					await this.pushFile(file);
+				} catch (e) {
+					console.error(e);
+					new Notice('Error pushing file.');
+				}
+			}
 		});
 
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-
+		this.addSettingTab(new GitHubPagerSettingTab(this.app, this));
 	}
+
+	async pushFile(file: TFile): Promise<boolean> {
+		if (!this.processor || !this.githubAdapter) return false;
+
+		const content = await this.processor.process(file);
+		const encoder = new TextEncoder();
+		const data = encoder.encode(content);
+		const contentBase64 = arrayBufferToBase64(data.buffer);
+		
+		const basePath = this.settings.basePath.replace(/^\//, '').replace(/\/$/, '');
+		const path = basePath ? `${basePath}/${file.name}` : file.name;
+		const message = this.settings.commitMessage.replace('{{file}}', file.name);
+		
+		new Notice(`Pushing ${file.name}...`);
+		const success = await this.githubAdapter.pushFile(path, contentBase64, message);
+		
+		if (success) {
+			new Notice(`Successfully pushed ${file.name}`);
+		} else {
+			new Notice(`Failed to push ${file.name}`);
+		}
+		return success;
+	}
+
+
+
 
 	onunload() {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<MyPluginSettings>);
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+		this.initAdapter();
+	}
+
+	initAdapter() {
+		if (this.settings.githubToken && this.settings.repositoryOwner && this.settings.repositoryName) {
+			const adapter = new GitHubAdapter(
+				this.settings.githubToken,
+				this.settings.repositoryOwner,
+				this.settings.repositoryName
+			);
+			this.githubAdapter = adapter;
+			this.processor = new ContentProcessor(adapter, this.app, this.settings);
+		} else {
+			this.githubAdapter = null;
+			this.processor = null;
+		}
 	}
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		let {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}

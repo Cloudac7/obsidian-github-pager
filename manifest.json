@@ -1,11 +1,10 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "obsidian-github-pager",
+	"name": "Obsidian GitHub Pager",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Treat Obsidian as a CMS: Selectively publish notes and images to GitHub for Hugo/Jekyll/Hexo sites.",
+	"author": "Antigravity",
+	"authorUrl": "https://github.com/cloudac7",
 	"isDesktopOnly": false
 }
