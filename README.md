@@ -1,4 +1,4 @@
-# Obsidian GitHub Pager
+# GitHub Pager
 
 Treat Obsidian as a Headless CMS. Selectively publish notes and images to a GitHub repository, compatible with Hugo, Jekyll, Hexo, and other static site generators.
 
