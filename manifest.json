@@ -1,6 +1,6 @@
 {
-	"id": "obsidian-github-pager",
-	"name": "Obsidian GitHub Pager",
+	"id": "github-pager",
+	"name": "GitHub Pager",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Treat Obsidian as a CMS: Selectively publish notes and images to GitHub for Hugo/Jekyll/Hexo sites.",
