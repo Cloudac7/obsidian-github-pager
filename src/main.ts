@@ -16,10 +16,10 @@ export default class GitHubPagerPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'test-github-connection',
-			name: 'Test GitHub Connection',
+			name: 'Test GitHub connection',
 			callback: async () => {
 				if (!this.githubAdapter) {
-					new Notice('GitHub Adapter not initialized. Check settings.');
+					new Notice('GitHub adapter not initialized. Check settings.');
 					return;
 				}
 				const user = await this.githubAdapter.verifyAuth();
@@ -33,7 +33,7 @@ export default class GitHubPagerPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'push-current-file',
-			name: 'Push Current File to GitHub',
+			name: 'Push current file to GitHub',
 			callback: async () => {
 				const file = this.app.workspace.getActiveFile();
 				if (!file) {
@@ -41,7 +41,7 @@ export default class GitHubPagerPlugin extends Plugin {
 					return;
 				}
 				if (!this.githubAdapter || !this.processor) {
-					new Notice('GitHub Adapter not ready.');
+					new Notice('GitHub adapter not ready.');
 					return;
 				}
 				
@@ -81,7 +81,7 @@ export default class GitHubPagerPlugin extends Plugin {
 		const contentBase64 = arrayBufferToBase64(data.buffer);
 		
 		const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
-		const remotePathOverride = frontmatter?.remote_path;
+		const remotePathOverride = frontmatter?.remote_path as string | undefined;
 		let basePath = this.settings.basePath;
 		if (typeof remotePathOverride === 'string') {
 			basePath = remotePathOverride;
@@ -109,7 +109,7 @@ export default class GitHubPagerPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData()) as GitHubPagerSettings;
 	}
 
 	async saveSettings() {

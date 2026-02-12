@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, TFile } from 'obsidian';
+import { App, PluginSettingTab, Setting } from 'obsidian';
 import GitHubPagerPlugin from './main';
 
 export class GitHubPagerSettingTab extends PluginSettingTab {
@@ -15,10 +15,10 @@ export class GitHubPagerSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('GitHub Token')
-			.setDesc('Personal Access Token (PAT) with repo scope.')
+			.setName('GitHub token')
+			.setDesc('The personal access token with repo scope. See https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token')
 			.addText(text => text
-				.setPlaceholder('ghp_...')
+				.setPlaceholder('It should be something like `ghp_...`')
 				.setValue(this.plugin.settings.githubToken)
 				.onChange(async (value) => {
 					this.plugin.settings.githubToken = value;
@@ -26,10 +26,9 @@ export class GitHubPagerSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Repository Owner')
-			.setDesc('The owner of the repository (user or org).')
+			.setName('Repository owner')
+			.setDesc('The owner of the repository (user or org), like: octocat')
 			.addText(text => text
-				.setPlaceholder('octocat')
 				.setValue(this.plugin.settings.repositoryOwner)
 				.onChange(async (value) => {
 					this.plugin.settings.repositoryOwner = value;
@@ -37,10 +36,9 @@ export class GitHubPagerSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Repository Name')
-			.setDesc('The name of the repository.')
+			.setName('Repository name')
+			.setDesc('The name of the repository, like: hello-world')
 			.addText(text => text
-				.setPlaceholder('my-blog')
 				.setValue(this.plugin.settings.repositoryName)
 				.onChange(async (value) => {
 					this.plugin.settings.repositoryName = value;
@@ -48,10 +46,10 @@ export class GitHubPagerSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Base Path')
+			.setName('Base path')
 			.setDesc('Path in the repo where notes will be saved (e.g. content/posts).')
 			.addText(text => text
-				.setPlaceholder('content/posts')
+				.setPlaceholder('The directory path in the remote repo, e.g. content/posts')
 				.setValue(this.plugin.settings.basePath)
 				.onChange(async (value) => {
 					this.plugin.settings.basePath = value;
@@ -59,10 +57,10 @@ export class GitHubPagerSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Image Path')
+			.setName('Image path')
 			.setDesc('Path in the repo where images will be saved.')
 			.addText(text => text
-				.setPlaceholder('static/images')
+				.setPlaceholder('The directory path in the remote repo for images, e.g. static/images')
 				.setValue(this.plugin.settings.imagePath)
 				.onChange(async (value) => {
 					this.plugin.settings.imagePath = value;
@@ -70,7 +68,7 @@ export class GitHubPagerSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Commit Message')
+			.setName('Commit message')
 			.setDesc('Commit message template. Use {{file}} as a placeholder for the filename.')
 			.addText(text => text
 				.setPlaceholder('Update {{file}} via Obsidian')
@@ -81,7 +79,7 @@ export class GitHubPagerSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Auto Sync')
+			.setName('Auto sync')
 			.setDesc('Automatically push changes to GitHub when you save a file with the "share" frontmatter property set to true.')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.autoSync)

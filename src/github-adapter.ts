@@ -1,4 +1,5 @@
 import { Octokit } from "@octokit/rest";
+import type { EndpointDefaults } from "@octokit/types";
 import { retry } from "@octokit/plugin-retry";
 import { throttling } from "@octokit/plugin-throttling";
 
@@ -16,15 +17,17 @@ export class GitHubAdapter {
             auth: token,
             userAgent: 'obsidian-github-pager',
             throttle: {
-                onRateLimit: (retryAfter: number, options: any, octokit: Octokit) => {
-                    octokit.log.warn(`Request quota exhausted for request ${options.method} ${options.url}`);
-                    if (options.request.retryCount < 3) {
-                        octokit.log.info(`Retrying after ${retryAfter} seconds!`);
-                        return true;
+                onRateLimit: (retryAfter: number, options: EndpointDefaults, octokit: Octokit) => {
+                    if (options !== undefined) {
+                        octokit.log.warn(`Request quota exhausted for request ${options.method} ${options.url}`);
+                        if (options.request && options.request.retryCount < 3) {
+                            octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+                            return true;
+                        }
                     }
                     return false;
                 },
-                onSecondaryRateLimit: (retryAfter: number, options: any, octokit: Octokit) => {
+                onSecondaryRateLimit: (retryAfter: number, options: EndpointDefaults, octokit: Octokit) => {
                     octokit.log.warn(`SecondaryRateLimit detected for request ${options.method} ${options.url}`);
                     return true;
                 },
@@ -56,8 +59,9 @@ export class GitHubAdapter {
                     return false;
                 }
                 sha = data.sha;
-            } catch (e: any) {
-                if (e.status !== 404) {
+            } catch (e: unknown) {
+                const error = e as { status: number };
+                if (error.status !== 404) {
                     throw e;
                 }
             }

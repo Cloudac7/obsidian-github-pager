@@ -1,10 +1,10 @@
-import { TFile, debounce, Notice } from "obsidian";
+import { TFile, debounce, Notice, Debouncer } from "obsidian";
 import GitHubPagerPlugin from "./main";
 
 export class SyncEngine {
     plugin: GitHubPagerPlugin;
     syncQueue: Set<string> = new Set();
-    debouncedProcess: Function;
+    debouncedProcess: Debouncer<[], Promise<void>>;
 
     constructor(plugin: GitHubPagerPlugin) {
         this.plugin = plugin;
