@@ -3,21 +3,16 @@ import { GitHubPagerSettings, DEFAULT_SETTINGS } from "./settings";
 import { GitHubPagerSettingTab } from "./settings-tab";
 import { GitHubAdapter } from "./github-adapter";
 import { ContentProcessor } from "./content-processor";
-import { SyncEngine } from "./sync-engine";
 
 export default class GitHubPagerPlugin extends Plugin {
 	settings: GitHubPagerSettings;
 	githubAdapter: GitHubAdapter | null = null;
 	processor: ContentProcessor | null = null;
-	syncEngine: SyncEngine | null = null;
 
 	async onload() {
 		await this.loadSettings();
 
 		this.initAdapter();
-
-		this.syncEngine = new SyncEngine(this);
-		this.syncEngine.start();
 
 		this.addCommand({
 			id: 'test-github-connection',
@@ -59,6 +54,21 @@ export default class GitHubPagerPlugin extends Plugin {
 			}
 		});
 
+		this.registerEvent(
+			this.app.workspace.on("file-menu", (menu, file) => {
+				if (file instanceof TFile) {
+					menu.addItem((item) => {
+						item
+							.setTitle("Sync to GitHub")
+							.setIcon("github")
+							.onClick(async () => {
+								await this.pushFile(file);
+							});
+					});
+				}
+			})
+		);
+
 		this.addSettingTab(new GitHubPagerSettingTab(this.app, this));
 	}
 
@@ -70,7 +80,14 @@ export default class GitHubPagerPlugin extends Plugin {
 		const data = encoder.encode(content);
 		const contentBase64 = arrayBufferToBase64(data.buffer);
 		
-		const basePath = this.settings.basePath.replace(/^\//, '').replace(/\/$/, '');
+		const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+		const remotePathOverride = frontmatter?.remote_path;
+		let basePath = this.settings.basePath;
+		if (typeof remotePathOverride === 'string') {
+			basePath = remotePathOverride;
+		}
+
+		basePath = basePath.replace(/^\//, '').replace(/\/$/, '');
 		const path = basePath ? `${basePath}/${file.name}` : file.name;
 		const message = this.settings.commitMessage.replace('{{file}}', file.name);
 		

@@ -22,15 +22,17 @@ Treat Obsidian as a Headless CMS. Selectively publish notes and images to a GitH
 
 Go to **Settings > Obsidian GitHub Pager** and configure:
 
-- **GitHub Token**: A Personal Access Token (PAT) with `repo` scope.
+- **GitHub Token**: A Personal Access Token (PAT) with `repo` scope. See [Creating a personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token). Ensure the token has access to the target repository with content write permissions.
 - **Repository Owner**: Your GitHub username or organization.
 - **Repository Name**: The name of the destination repository.
 - **Base Path**: Folder in the repo where notes should be saved (e.g., `content/posts`).
 - **Image Path**: Folder in the repo where images should be saved (e.g., `static/images`).
+- **Commit Message**: Template for commit messages (use `{file}` to include the filename).
 - **Auto Sync**: Enable to push changes automatically on save.
 
 ## Usage
 
-1. Add `share: true` to the Frontmatter of any note you want to publish.
-2. The plugin will automatically detect the change and push the file (and any linked images) to GitHub.
-3. You can also manually push the current file using the command palette: `Push Current File to GitHub`.
+1. You can also manually push the current file using the command in the menu or command palette: `Push Current File to GitHub`
+2. If you want to publish a note to custom path, add `remote_path: custom/path/to/dir` to the Frontmatter.
+3. When `Auto Sync` is enabled, any time you save a note with `share: true` in the Frontmatter, it will be automatically pushed to GitHub.
+4. Check the Obsidian console (Ctrl+Shift+I) for logs and errors.

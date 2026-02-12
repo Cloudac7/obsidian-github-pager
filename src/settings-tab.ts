@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
+import { App, PluginSettingTab, Setting, TFile } from 'obsidian';
 import GitHubPagerPlugin from './main';
 
 export class GitHubPagerSettingTab extends PluginSettingTab {
@@ -66,6 +66,27 @@ export class GitHubPagerSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.imagePath)
 				.onChange(async (value) => {
 					this.plugin.settings.imagePath = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Commit Message')
+			.setDesc('Commit message template. Use {{file}} as a placeholder for the filename.')
+			.addText(text => text
+				.setPlaceholder('Update {{file}} via Obsidian')
+				.setValue(this.plugin.settings.commitMessage)
+				.onChange(async (value) => {
+					this.plugin.settings.commitMessage = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Auto Sync')
+			.setDesc('Automatically push changes to GitHub when you save a file with the "share" frontmatter property set to true.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.autoSync)
+				.onChange(async (value) => {
+					this.plugin.settings.autoSync = value;
 					await this.plugin.saveSettings();
 				}));
 	}

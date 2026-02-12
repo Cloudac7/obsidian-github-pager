@@ -58,7 +58,12 @@ export class ContentProcessor {
             const linkedFile = this.app.metadataCache.getFirstLinkpathDest(linkPath, file.path);
             
             if (linkedFile) {
-                 const basePath = this.settings.basePath.replace(/^\//, '').replace(/\/$/, '');
+                 const linkedFrontmatter = this.app.metadataCache.getFileCache(linkedFile)?.frontmatter;
+                 let basePath = this.settings.basePath;
+                 if (linkedFrontmatter?.remote_path && typeof linkedFrontmatter.remote_path === 'string') {
+                     basePath = linkedFrontmatter.remote_path;
+                 }
+                 basePath = basePath.replace(/^\//, '').replace(/\/$/, '');
                  const destPath = `/${basePath}/${linkedFile.name}`;
                  
                  const newLink = `[${alias || linkedFile.basename}](${destPath})`;
